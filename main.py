@@ -1,15 +1,16 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
 
-class Student(BaseModel):
+class Student(BaseModel): ## how a student object should look like
   student_id : int
   name : str
   surname : str
   room_number : str
 
-class StudentCreate(BaseModel):
+class StudentCreate(BaseModel): ## how a student-create object should look like
    student_id : int
    name : str
    surname : str
@@ -23,7 +24,7 @@ class Appointment(BaseModel):
    pass
 
 
-students = [
+students = [  ## creating student objects to test
     Student(
         student_id=1,
         name="Ali",
@@ -43,7 +44,7 @@ students = [
 def home():
   return {"hello" : "world!"}
 
-@app.post("/students")
+@app.post("/students", response_model=Student) ## create a new student
 def create_stduent(student : StudentCreate):
 
    new_id = len(students) + 1
@@ -59,12 +60,18 @@ def create_stduent(student : StudentCreate):
 
    return new_student
 
-@app.get("/students")
+@app.get("/students", response_model=list[Student]) ## get a list of all existing students
 def get_all_students():
   return students
 
-@app.get("/students/{student_id}")
+@app.get("/students/{student_id}", response_model=Student) ## get an existing student
 def get_student(student_id: int):
     for student in students:
         if student.student_id == student_id:
             return student
+
+
+    raise HTTPException(
+       status_code=404,
+       detail="Student not found"
+    )
